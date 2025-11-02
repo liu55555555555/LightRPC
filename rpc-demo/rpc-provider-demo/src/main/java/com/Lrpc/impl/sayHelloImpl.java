@@ -1,6 +1,8 @@
-package com.Lrpc;
+package com.Lrpc.impl;
 
-public class sayHelloImpl implements sayHello{
+import com.Lrpc.sayHello;
+
+public class sayHelloImpl implements sayHello {
     @Override
     public String HelloRPC(String msg) {
         return "hello consumer:"+msg;

@@ -30,7 +30,7 @@
         <zookeeper.version>3.9.4</zookeeper.version>
 
         <!-- 开发工具版本 -->
-        <lombok.version>1.18.20</lombok.version>
+        <lombok.version>1.18.42</lombok.version>
 
         <!-- 工具库版本 -->
         <commons-lang3.version>3.18.0</commons-lang3.version>
@@ -94,6 +94,7 @@
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
                 <version>${logback.version}</version>
+                <scope>compile</scope>
             </dependency>
 
             <!-- ========== 测试组 ========== -->
@@ -104,6 +105,9 @@
                 <scope>test</scope>
             </dependency>
         </dependencies>
+
+
+
     </dependencyManagement>
 
     <build>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- 完全禁用 Logback 自身日志 -->
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+
+    <!-- 控制台输出 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 只关注你的 RPC 框架日志 -->
+    <logger name="com.lightrpc" level="DEBUG" />
+    <logger name="com.Lrpc" level="DEBUG" /><!-- 这里的debug代表实际的开发代码中可以使用 log.debug输出日志了 -->
+
+    <!-- 根日志设为 WARN，减少第三方库噪音 -->
+    <root level="debug">
+        <appender-ref ref="CONSOLE" />
+    </root>
+</configuration>
