@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 @Slf4j
-public class ZookeeperUtil {
+public class ZookeeperUtils {
 
 
     /**
@@ -32,14 +32,14 @@ public class ZookeeperUtil {
     public static ZooKeeper createZookeeper(String connectString,int  timeout){
         CountDownLatch countDownLatch = new CountDownLatch(1);
 
-
-
         try {
             //创建Zookeeper实例，建立链接
             final ZooKeeper zooKeeper = new ZooKeeper(connectString, timeout, event -> {
                 //只有链接成功才放行
                 if(event.getState() == Watcher.Event.KeeperState.SyncConnected){
-                    System.out.println("客户端已连接成功");
+                    if(log.isDebugEnabled()){
+                        log.debug("客户端已连接成功");
+                    }
                     countDownLatch.countDown();
                 }
             });
@@ -76,9 +76,43 @@ public class ZookeeperUtil {
                 }
             } catch (KeeperException | InterruptedException e) {
                 log.error("创建基础目录时发生异常：" ,e);
-                throw new ZookeeperException();
+                throw new ZookeeperException(e);
             }
     }
+
+    /**
+     * 判断节点是否存在
+     * @param zooKeeper zookeeper实例
+     * @param path 节点路径
+     * @param watcher watcher实例
+     * @return true:存在 false:不存在
+     */
+    public static boolean exists(ZooKeeper zooKeeper,String path,Watcher watcher){
+        try {
+            return zooKeeper.exists(path, watcher) != null;
+        } catch (KeeperException | InterruptedException e) {
+            log.error("查询节点[{}]时发生异常",path,e);
+            throw new ZookeeperException(e);
+        }
+    }
+
+
+    /**
+     * 查询一个节点的子元素
+     * @param zooKeeper zookeeper实例
+     * @param path 节点路径
+     * @return  子元素列表
+     */
+    public static List<String> getChildren(ZooKeeper zooKeeper, String path, Watcher watcher){
+        try {
+            return zooKeeper.getChildren(path, watcher);
+        } catch (KeeperException | InterruptedException e) {
+            log.error("查询节点[{}]时发生异常",path,e);
+            throw new ZookeeperException(e);
+        }
+    }
+
+
 
     /**
      * 关闭一个zookeeper实例
@@ -92,6 +126,9 @@ public class ZookeeperUtil {
             throw new ZookeeperException();
         }
     }
+
+
+
 
 
 }

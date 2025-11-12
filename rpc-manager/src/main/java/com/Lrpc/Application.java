@@ -1,7 +1,7 @@
 package com.Lrpc;
 
 import com.Lrpc.utils.zookeeper.ZookeeperNode;
-import com.Lrpc.utils.zookeeper.ZookeeperUtil;
+import com.Lrpc.utils.zookeeper.ZookeeperUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.zookeeper.*;
 
@@ -46,23 +46,23 @@ public class Application {
 
 
         //定义节点和数据
-        String basePath = "/lrpc-metadata";
-        String providerPath = basePath+"/providers";
-        String consumersPath = basePath+"/consumers";
+//        String basePath = "/lrpc-metadata";
+//        String providerPath = basePath+"/providers";
+//        String consumersPath = basePath+"/consumers";
 
-        ZookeeperNode zookeeperNode1 = new ZookeeperNode("/lrpc-metadata",null);
-        ZookeeperNode zookeeperNode2= new ZookeeperNode(providerPath,null);
-        ZookeeperNode zookeeperNode3 = new ZookeeperNode(consumersPath,null);
+        ZookeeperNode zookeeperNode1 = new ZookeeperNode(Constant.BASE_PATH,null);
+        ZookeeperNode zookeeperNode2= new ZookeeperNode(Constant.BASE_PROVIDERS_PATH,null);
+        ZookeeperNode zookeeperNode3 = new ZookeeperNode(Constant.BASE_CONSUMERS_PATH,null);
 
 
         //创建zookeeper实例
-        ZooKeeper zooKeeper = ZookeeperUtil.createZookeeper();
+        ZooKeeper zooKeeper = ZookeeperUtils.createZookeeper();
 
         List.of(zookeeperNode1,zookeeperNode2,zookeeperNode3).forEach(zookeeperNode -> {
-            ZookeeperUtil.createNode(zooKeeper,zookeeperNode,null, CreateMode.PERSISTENT);
+            ZookeeperUtils.createNode(zooKeeper,zookeeperNode,null, CreateMode.PERSISTENT);
         });
 
-        ZookeeperUtil.close(zooKeeper);
+        ZookeeperUtils.close(zooKeeper);
 
 
     }

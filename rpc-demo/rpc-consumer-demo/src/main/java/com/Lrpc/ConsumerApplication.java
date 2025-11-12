@@ -1,6 +1,12 @@
 package com.Lrpc;
 
-public class Application {
+import com.Lrpc.discovery.RegistryConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class ConsumerApplication {
+    private static final Logger log = LoggerFactory.getLogger(ConsumerApplication.class);
+
     public static void main(String[] args) {
         //获取RPC调用代理对象，使用ReferenceConfig进行封装(注意：这里的代理对象并不是获取咱们的服务类的代理对象，其实是一个携带了一些链接信息，参数信息的消费者代理类对象，这个代理类对象去通过网络去调用目标方法)
         ReferenceConfig<sayHello> reference=new ReferenceConfig<>();
@@ -18,7 +24,9 @@ public class Application {
 
         //获取一个代理对象
         sayHello hello=reference.get();
-        System.out.println(hello.HelloRPC("你好"));
+        String s = hello.HelloRPC("你好");
+        log.info("HelloRPC--->{}",s);
+
 
     }
 
