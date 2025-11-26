@@ -5,6 +5,7 @@ import com.Lrpc.Exception.NetworkException;
 import com.Lrpc.LrpcBootstrap;
 import com.Lrpc.NettyBootStrapInitializer;
 import com.Lrpc.discovery.Registry;
+import com.Lrpc.enumeration.RequestType;
 import com.Lrpc.transport.message.LrpcRequest;
 import com.Lrpc.transport.message.RequestPayload;
 import io.netty.buffer.Unpooled;
@@ -69,7 +70,7 @@ public class RpcConsumerInvocationHandler  implements InvocationHandler {
                 .requestId(1L)
                 .compressType((byte) 1)
                 .serializeType((byte) 1)
-                .requestType((byte) 1)
+                .requestType(RequestType.REQUEST.getId())
                 .requestPayload(RequestPayload.builder()
                         .interfaceName(interfaceClass.getName())
                         .methodName(method.getName())

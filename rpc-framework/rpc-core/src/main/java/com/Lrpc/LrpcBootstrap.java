@@ -1,21 +1,18 @@
 package com.Lrpc;
 
+import com.Lrpc.ChannelHandler.handler.LrpcMessageDecoder;
+import com.Lrpc.ChannelHandler.handler.MethodCallHandler;
 import com.Lrpc.discovery.Registry;
 import com.Lrpc.discovery.RegistryConfig;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import lombok.SneakyThrows;
+import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.charset.Charset;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -121,7 +118,6 @@ public class LrpcBootstrap {
     /**
      * 服务器端创建netty，并启动netty服务
      */
-    @SneakyThrows
     public void start() {
 
 
@@ -137,20 +133,10 @@ public class LrpcBootstrap {
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
-                        //这里是核心，我们需要添加很多入站和出站的channelHandler
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
-                            socketChannel.pipeline().addLast(new SimpleChannelInboundHandler<>() {
-                                @Override
-                                protected void channelRead0(ChannelHandlerContext channelHandlerContext, Object msg) throws Exception {
-                                    ByteBuf byteBuf = (ByteBuf) msg;
-                                    log.info("服务端收到客户端传来的信息[{}]",byteBuf.toString(Charset.defaultCharset()));
-
-                                    //可以写数据返回给客户端，也可以不写回去
-                                    //channelHandlerContext.channel().writeAndFlush("服务器已经收你的信息");//在Handler内部优先使用 ctx.writeAndFlush()
-                                    channelHandlerContext.channel().writeAndFlush(Unpooled.copiedBuffer("服务端已经接收到消息，现在给你返回---->server".getBytes(Charset.defaultCharset())));
-
-                                }
-                            });
+                            socketChannel.pipeline().addLast(new LoggingHandler())
+                                    .addLast(new LrpcMessageDecoder())
+                                    .addLast(new MethodCallHandler());
                         }
                     });
 
@@ -167,7 +153,8 @@ public class LrpcBootstrap {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        }    }
+        }
+    }
 
 
 

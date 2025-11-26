@@ -1,6 +1,7 @@
 package com.Lrpc.ChannelHandler.handler;
 
 import ch.qos.logback.core.rolling.helper.Compressor;
+import com.Lrpc.enumeration.RequestType;
 import com.Lrpc.transport.message.LrpcRequest;
 import com.Lrpc.transport.message.MessageFormatConstant;
 import com.Lrpc.transport.message.RequestPayload;
@@ -29,7 +30,7 @@ public class LrpcMessageEncoder extends MessageToByteEncoder<LrpcRequest>{
         byteBuf.writeByte(MessageFormatConstant.VERSION);           // 写入1字节 → 写指针移动到5
         //两个字节的头部长度
         byteBuf.writeShort(MessageFormatConstant.HEADER_LENGTH);    // 写入2字节 → 写指针移动到7
-        //总长度不知道，因为不清楚body的长度:利用netty的writerIndex（）方法，这是一个写指针。byteBuf.writerIndex()：拿到当前写指针的位置，当之后处理完body后，知道了处理后的body的大小，我们在返回来这里填入数据
+        //总长度的值不知道，因为不清楚body的长度。但是我们知道总长度这个字段所占用的长度是4字节。所以利用netty的writerIndex（）方法先跳过。byteBuf.writerIndex()：这是一个写指针，拿到当前写指针的位置，当之后处理完body后，知道了处理后的body的大小，我们在返回来这里填入数据
         byteBuf.writerIndex(byteBuf.writerIndex() + MessageFormatConstant.FULL_FIELD_LENGTH);//操作做了什么：byteBuf.writerIndex()不传参：获取写指针当前的位置：7,7+4==11，最外层的方法：writerIndex(11)，则将指针指向11的位置，相当于跳过了4个字节。含义：为长度字段预留4字节空间，但不写入实际数据
         // 3个类型
         byteBuf.writeByte(lrpcRequest.getRequestType());// 1.请求类型
@@ -37,10 +38,14 @@ public class LrpcMessageEncoder extends MessageToByteEncoder<LrpcRequest>{
         byteBuf.writeByte(lrpcRequest.getCompressType());// 3.压缩类型
         // 8字节的请求id
         byteBuf.writeLong(lrpcRequest.getRequestId());
-        //写入请求体
-        byte[] bodyBytes = getBodyBytes(lrpcRequest.getRequestPayload());
-        byteBuf.writeBytes(bodyBytes);
 
+        //写入请求体,如果是心跳检测则不写入请求体
+        byte[] bodyBytes = getBodyBytes(lrpcRequest.getRequestPayload());
+        if(bodyBytes != null){
+            byteBuf.writeBytes(bodyBytes);
+        }
+
+        int bodyLength = bodyBytes == null ? 0 : bodyBytes.length;
 
         // 重新处理报文的总长度（因为之前咱们直接跳过了一段，现在返回来去补充内容）
         // 先保存当前的写指针的位置
@@ -49,7 +54,7 @@ public class LrpcMessageEncoder extends MessageToByteEncoder<LrpcRequest>{
         byteBuf.writerIndex(MessageFormatConstant.MAGIC.length
                 + MessageFormatConstant.VERSION_LENGTH + MessageFormatConstant.HEADER_FIELD_LENGTH
         );
-        byteBuf.writeInt(MessageFormatConstant.HEADER_LENGTH + bodyBytes.length);
+        byteBuf.writeInt(MessageFormatConstant.HEADER_LENGTH + bodyLength);
         // 将写指针归位
         byteBuf.writerIndex(writerIndex);
 
@@ -68,6 +73,9 @@ public class LrpcMessageEncoder extends MessageToByteEncoder<LrpcRequest>{
      * @return
      */
     private byte[] getBodyBytes(RequestPayload requestPayload){
+        if(requestPayload==null){
+            return null;
+        }
         // 对象变成一个字节数据--->序列化的过程
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream objectOutputStream = null;
