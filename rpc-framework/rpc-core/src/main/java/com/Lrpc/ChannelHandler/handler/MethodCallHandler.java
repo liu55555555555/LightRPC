@@ -22,7 +22,11 @@ public class MethodCallHandler extends SimpleChannelInboundHandler<LrpcRequest> 
         // 2.根据负载内容进行方法调用
         Object result = callTargetMethod(requestPayload);
 
-        // 3.封装响应
+        if(log.isDebugEnabled()){
+            log.debug("请求【{}】已经完成在服务端的方法调用",lrpcRequest.getRequestId());
+        }
+
+        // todo 3.封装响应
 
 
         // 4.返回结果

@@ -14,9 +14,9 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 
 @Slf4j
-public class LrpcMessageDecoder extends LengthFieldBasedFrameDecoder {
+public class LrpcRequestDecoder extends LengthFieldBasedFrameDecoder {
 
-    public LrpcMessageDecoder() {
+    public LrpcRequestDecoder() {
         // 调用这个父类的构造方法为了：找到当前报文的总长度，截取报文，截取出来的报文我们可以进行解析
         super(
                 // 最大帧的长度，超过这个maxFrameLength值会直接丢弃掉
@@ -25,7 +25,7 @@ public class LrpcMessageDecoder extends LengthFieldBasedFrameDecoder {
                 MessageFormatConstant.MAGIC.length + MessageFormatConstant.VERSION_LENGTH + MessageFormatConstant.HEADER_FIELD_LENGTH,
                 // 长度字段的长度
                 MessageFormatConstant.FULL_FIELD_LENGTH,
-                // todo 负载的适配长度
+                // 负载的适配长度
                 -(MessageFormatConstant.MAGIC.length + MessageFormatConstant.VERSION_LENGTH
                         + MessageFormatConstant.HEADER_FIELD_LENGTH + MessageFormatConstant.FULL_FIELD_LENGTH),
                 0);
@@ -109,8 +109,9 @@ public class LrpcMessageDecoder extends LengthFieldBasedFrameDecoder {
             throw new RuntimeException(e);
         }
 
-        log.info("请求【{}】解码成功",requestId);
-        System.out.println(lrpcRequest.toString());
+        if(log.isDebugEnabled()){
+            log.debug("请求【{}】已经在服务端完成报文的解码。", requestId);
+        }
 
         return lrpcRequest;
     }

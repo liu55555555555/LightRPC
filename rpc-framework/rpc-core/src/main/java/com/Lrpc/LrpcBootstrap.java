@@ -1,6 +1,7 @@
 package com.Lrpc;
 
-import com.Lrpc.ChannelHandler.handler.LrpcMessageDecoder;
+import com.Lrpc.ChannelHandler.handler.LrpcRequestDecoder;
+import com.Lrpc.ChannelHandler.handler.LrpcResponseEncoder;
 import com.Lrpc.ChannelHandler.handler.MethodCallHandler;
 import com.Lrpc.discovery.Registry;
 import com.Lrpc.discovery.RegistryConfig;
@@ -135,8 +136,10 @@ public class LrpcBootstrap {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
                             socketChannel.pipeline().addLast(new LoggingHandler())
-                                    .addLast(new LrpcMessageDecoder())
-                                    .addLast(new MethodCallHandler());
+                                    .addLast(new LrpcRequestDecoder())
+                                    .addLast(new MethodCallHandler())
+                                    .addLast(new LrpcResponseEncoder());
+
                         }
                     });
 
