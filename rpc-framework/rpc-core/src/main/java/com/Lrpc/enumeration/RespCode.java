@@ -11,4 +11,12 @@ public enum RespCode {
         this.desc = desc;
         this.code = code;
     }
+
+    public byte getCode() {
+        return code;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
 }

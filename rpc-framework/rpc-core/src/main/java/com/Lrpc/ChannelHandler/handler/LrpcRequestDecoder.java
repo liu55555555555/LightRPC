@@ -81,6 +81,7 @@ public class LrpcRequestDecoder extends LengthFieldBasedFrameDecoder {
 
         // 封装
         LrpcRequest lrpcRequest = LrpcRequest.builder()
+                .requestId(requestId)
                 .requestType(requestType)
                 .compressType(compressType)
                 .serializeType(serializeType)

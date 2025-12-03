@@ -53,7 +53,7 @@ public class RpcConsumerInvocationHandler  implements InvocationHandler {
 
 
         //2.用netty链接服务器，发送 封装好的调用的服务的 名字、方法名字、参数列表，得到结果
-        //todo: q:整个链接过程放在这里行不行，也就意味着每次调用都会产生一个新的netty链接。   解决：缓存我们的channel链接，先尝试从缓存中获取channel，如果没有，在创建新的连接，并进行缓存。
+        //q:整个链接过程放在这里行不行，也就意味着每次调用都会产生一个新的netty链接。   解决：缓存我们的channel链接，先尝试从缓存中获取channel，如果没有，在创建新的连接，并进行缓存。
         //        不正确的代码：NioEventLoopGroup group = new NioEventLoopGroup();
         //        也就是说每次在此处建立一个新的连接是不合适的
 
@@ -67,7 +67,7 @@ public class RpcConsumerInvocationHandler  implements InvocationHandler {
         //2.2封装报文
         //将要传输的东西先封装成对象，经过outHandler时被handler处理成二进制报文。
         LrpcRequest lrpcRequest = LrpcRequest.builder()
-                .requestId(1L)
+                .requestId(LrpcBootstrap.ID_GENERATOR.getId())
                 .compressType((byte) 1)
                 .serializeType((byte) 1)
                 .requestType(RequestType.REQUEST.getId())
@@ -98,7 +98,7 @@ public class RpcConsumerInvocationHandler  implements InvocationHandler {
          */
         //2.3 写出报文
         CompletableFuture<Object> completableFuture = new CompletableFuture<>();
-        //todo ：将completableFuture暴露出去
+        // 将completableFuture暴露出去
         LrpcBootstrap.PENDING_REQUESTS.put(1L,completableFuture);
 
 
@@ -110,7 +110,7 @@ public class RpcConsumerInvocationHandler  implements InvocationHandler {
                     //但是writeAndFlush一旦将数据写出去，这个writeAndFlush就结束关闭了，没有返回值
                     //所以promise也就关闭了，而我们要的是服务端给我们的返回值，所以这里这个if判断isDone是有问题的，最后promise.getNow()获取是个null
                     //所以我们要将 completableFuture 挂起并且暴露，让服务器可以去使用这个completableFuture，这样我们就可以得到服务提供方给我们的放回值了，得到服务提供放的响应后在调用complete方法
-                    //todo ：将completableFuture暴露出去
+                    //将completableFuture暴露出去
 //                        if(promise.isDone()){
 //                            completableFuture.complete(promise.getNow());
 //                        } else

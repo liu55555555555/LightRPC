@@ -2,7 +2,9 @@ package com.Lrpc.ChannelHandler.handler;
 
 import com.Lrpc.LrpcBootstrap;
 import com.Lrpc.ServiceConfig;
+import com.Lrpc.enumeration.RespCode;
 import com.Lrpc.transport.message.LrpcRequest;
+import com.Lrpc.transport.message.LrpcResponse;
 import com.Lrpc.transport.message.RequestPayload;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -26,11 +28,22 @@ public class MethodCallHandler extends SimpleChannelInboundHandler<LrpcRequest> 
             log.debug("请求【{}】已经完成在服务端的方法调用",lrpcRequest.getRequestId());
         }
 
-        // todo 3.封装响应
+        // 3.封装响应
+        LrpcResponse lrpcResponse = LrpcResponse.builder()
+                .requestId(lrpcRequest.getRequestId())
+                .code(RespCode.SUCCESS.getCode())
+                .compressType(lrpcRequest.getCompressType())
+                .serializeType(lrpcRequest.getSerializeType())
+                .responseBody(result)
+                .build();
 
 
         // 4.返回结果
-        channelHandlerContext.channel().writeAndFlush(result);
+        channelHandlerContext.channel().writeAndFlush(lrpcResponse);
+
+        if(log.isDebugEnabled()){
+            log.debug("请求【{}】已经将调用的方法结果返回",lrpcRequest.getRequestId());
+        }
 
 
     }

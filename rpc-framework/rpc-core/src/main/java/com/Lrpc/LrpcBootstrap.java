@@ -5,6 +5,7 @@ import com.Lrpc.ChannelHandler.handler.LrpcResponseEncoder;
 import com.Lrpc.ChannelHandler.handler.MethodCallHandler;
 import com.Lrpc.discovery.Registry;
 import com.Lrpc.discovery.RegistryConfig;
+import com.Lrpc.utils.IdGenerator;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -37,6 +38,9 @@ public class LrpcBootstrap {
 
     //定义全局的对外挂起的 completableFuture
     public static final Map<Long,CompletableFuture<Object>> PENDING_REQUESTS = new ConcurrentHashMap<>(128);
+
+    //全局的id生成器
+    public static final IdGenerator ID_GENERATOR = new IdGenerator(1,2);
 
     //构造器私有化
     private LrpcBootstrap(){

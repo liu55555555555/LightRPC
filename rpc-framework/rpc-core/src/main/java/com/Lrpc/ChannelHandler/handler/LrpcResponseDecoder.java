@@ -67,7 +67,7 @@ public class LrpcResponseDecoder extends LengthFieldBasedFrameDecoder {
         // 4、解析总长度
         int fullLength = byteBuf.readInt();
 
-        // 5、请求类型
+        // 5、响应码
         byte responseCode = byteBuf.readByte();
 
         // 6、序列化类型
@@ -95,18 +95,18 @@ public class LrpcResponseDecoder extends LengthFieldBasedFrameDecoder {
 //        }
 
         // 9、请求体
-        int payloadLength = fullLength - headLength;
-        byte[] payload = new byte[payloadLength];
-        byteBuf.readBytes(payload);
+        int bodyLength = fullLength - headLength;
+        byte[] body = new byte[bodyLength];
+        byteBuf.readBytes(body);
 
         // todo 10.解压缩
 
         // 11.反序列化
-        try (ByteArrayInputStream bis = new ByteArrayInputStream(payload);
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(body);
              ObjectInputStream ois = new ObjectInputStream(bis);
         ){
-            Object body = (RequestPayload) ois.readObject();
-            lrpcResponse.setResponseBody(body);
+            Object responseBody =  ois.readObject();
+            lrpcResponse.setResponseBody(responseBody);
         } catch (IOException  | ClassNotFoundException e) {
             log.error("请求【{}】反序列化时发生了异常",requestId,e);
             throw new RuntimeException(e);

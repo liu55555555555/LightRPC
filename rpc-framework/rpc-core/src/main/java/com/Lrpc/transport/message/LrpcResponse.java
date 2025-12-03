@@ -25,7 +25,7 @@ public class LrpcResponse implements Serializable {
     // 响应码 1:成功 2:失败
     private byte code;
 
-    private long timeStamp;
+//    private long timeStamp;
 
     // 具体的消息体
     private Object responseBody;

@@ -23,7 +23,7 @@ public class MySimpleChannelInboundHandler extends SimpleChannelInboundHandler<L
         CompletableFuture<Object> future = LrpcBootstrap.PENDING_REQUESTS.get(1L);
         future.complete(returnValue);
         if(log.isDebugEnabled()){
-            log.debug("已经寻找到编号为【{}】的CompletableFuture，处理响应结果",returnValue);
+            log.debug("已经寻找到编号为【{}】的CompletableFuture，响应结果为：【{}】",lrpcResponse.getRequestId(),returnValue.toString());
         }
     }
 }
