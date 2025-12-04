@@ -42,6 +42,8 @@ public class LrpcBootstrap {
     //全局的id生成器
     public static final IdGenerator ID_GENERATOR = new IdGenerator(1,2);
 
+    public static String SERIALIZE_TYPE = "jdk";
+
     //构造器私有化
     private LrpcBootstrap(){
         //构造启动引导程序时需要做一些什么初始化的事
@@ -178,6 +180,15 @@ public class LrpcBootstrap {
         //配置reference，将来调用get方法时，方便生成代理对象
         return this;
 
+    }
+
+
+    public LrpcBootstrap serialize(String serializeType) {
+        SERIALIZE_TYPE = serializeType;
+        if(log.isDebugEnabled()){
+            log.debug("当前工程使用了：{}协议进行序列化。",serializeType);
+        }
+        return this;
     }
 
 

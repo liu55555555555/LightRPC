@@ -20,7 +20,8 @@ public class ConsumerApplication {
         LrpcBootstrap.getInstance()
                 .application("first-consumer")
                 .register(new RegistryConfig("zookeeper://127.0.0.1:2181"))
-                .reference(reference);
+                .reference(reference)
+                .serialize("jdk");
 
         //获取一个代理对象
         sayHello hello=reference.get();

@@ -1,5 +1,7 @@
 package com.Lrpc.ChannelHandler.handler;
 
+import com.Lrpc.serialize.Serialize;
+import com.Lrpc.serialize.SerializerFactory;
 import com.Lrpc.transport.message.LrpcRequest;
 import com.Lrpc.transport.message.LrpcResponse;
 import com.Lrpc.transport.message.MessageFormatConstant;
@@ -40,7 +42,7 @@ import java.io.ObjectOutputStream;
  * body
  */
 @Slf4j
-public class LrpcResponseEncoder extends MessageToByteEncoder<LrpcResponse>{
+public class LrpcResponseEncoder extends MessageToByteEncoder<LrpcResponse> {
     @Override
     protected void encode(ChannelHandlerContext channelHandlerContext, LrpcResponse lrpcResponse, ByteBuf byteBuf) throws Exception {
         // 4个字节的魔术值
@@ -58,9 +60,12 @@ public class LrpcResponseEncoder extends MessageToByteEncoder<LrpcResponse>{
         // 8字节的请求id
         byteBuf.writeLong(lrpcResponse.getRequestId());
 
-        //写入请求体,如果是心跳检测则不写入请求体
-        byte[] bodyBytes = getBodyBytes(lrpcResponse.getResponseBody());
-        if(bodyBytes != null){
+        // todo 压缩
+
+        // 序列化 写入请求体,如果是心跳检测则不写入请求体
+        Serialize serialize = SerializerFactory.getByteSerialize(lrpcResponse.getSerializeType()).getSerialize();
+        byte[] bodyBytes = serialize.serialize(lrpcResponse.getResponseBody());
+        if (bodyBytes != null) {
             byteBuf.writeBytes(bodyBytes);
         }
 
@@ -80,28 +85,6 @@ public class LrpcResponseEncoder extends MessageToByteEncoder<LrpcResponse>{
         if (log.isDebugEnabled()) {
             log.debug("响应【{}】已经完成报文的编码。", lrpcResponse.getRequestId());
         }
-    }
-
-    /**
-     * 将对象转换成字节数组
-     * @param responseBody
-     * @return
-     */
-    private byte[] getBodyBytes(Object responseBody){
-        if(responseBody==null){
-            return null;
-        }
-        // 对象变成一个字节数据--->序列化的过程
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream objectOutputStream = null;
-        try {
-            objectOutputStream = new ObjectOutputStream(baos);
-            objectOutputStream.writeObject(responseBody);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return baos.toByteArray();
-
     }
 
 }

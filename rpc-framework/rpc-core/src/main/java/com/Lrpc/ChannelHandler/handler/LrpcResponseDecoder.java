@@ -1,6 +1,8 @@
 package com.Lrpc.ChannelHandler.handler;
 
 import com.Lrpc.enumeration.RequestType;
+import com.Lrpc.serialize.Serialize;
+import com.Lrpc.serialize.SerializerFactory;
 import com.Lrpc.transport.message.LrpcRequest;
 import com.Lrpc.transport.message.LrpcResponse;
 import com.Lrpc.transport.message.MessageFormatConstant;
@@ -102,15 +104,9 @@ public class LrpcResponseDecoder extends LengthFieldBasedFrameDecoder {
         // todo 10.解压缩
 
         // 11.反序列化
-        try (ByteArrayInputStream bis = new ByteArrayInputStream(body);
-             ObjectInputStream ois = new ObjectInputStream(bis);
-        ){
-            Object responseBody =  ois.readObject();
-            lrpcResponse.setResponseBody(responseBody);
-        } catch (IOException  | ClassNotFoundException e) {
-            log.error("请求【{}】反序列化时发生了异常",requestId,e);
-            throw new RuntimeException(e);
-        }
+        Serialize serialize = SerializerFactory.getByteSerialize(serializeType).getSerialize();
+        Object responseBody = serialize.deserialize(body, Object.class);
+        lrpcResponse.setResponseBody(responseBody);
 
         if(log.isDebugEnabled()){
             log.debug("响应【{}】已经在客户端完成解码",lrpcResponse.getRequestId());

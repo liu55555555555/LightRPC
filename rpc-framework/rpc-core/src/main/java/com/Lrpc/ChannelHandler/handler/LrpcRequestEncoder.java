@@ -1,5 +1,9 @@
 package com.Lrpc.ChannelHandler.handler;
 
+import com.Lrpc.LrpcBootstrap;
+import com.Lrpc.serialize.Serialize;
+import com.Lrpc.serialize.SerializerFactory;
+import com.Lrpc.serialize.impl.JdkSerialize;
 import com.Lrpc.transport.message.LrpcRequest;
 import com.Lrpc.transport.message.MessageFormatConstant;
 import com.Lrpc.transport.message.RequestPayload;
@@ -38,10 +42,13 @@ public class LrpcRequestEncoder extends MessageToByteEncoder<LrpcRequest>{
         byteBuf.writeLong(lrpcRequest.getRequestId());
 
         //写入请求体,如果是心跳检测则不写入请求体
-        byte[] bodyBytes = getBodyBytes(lrpcRequest.getRequestPayload());
+        // 1.根据配置的序列化方式进行序列化
+        Serialize serialize = SerializerFactory.getStringSerialize(LrpcBootstrap.SERIALIZE_TYPE).getSerialize();
+        byte[] bodyBytes = serialize.serialize(lrpcRequest.getRequestPayload());
         if(bodyBytes != null){
             byteBuf.writeBytes(bodyBytes);
         }
+        // 2.根据配置的压缩方式进行压缩
 
         int bodyLength = bodyBytes == null ? 0 : bodyBytes.length;
 
@@ -61,26 +68,28 @@ public class LrpcRequestEncoder extends MessageToByteEncoder<LrpcRequest>{
         }
     }
 
-    /**
-     * 将对象转换成字节数组
-     * @param requestPayload
-     * @return
-     */
-    private byte[] getBodyBytes(RequestPayload requestPayload){
-        if(requestPayload==null){
-            return null;
-        }
-        // 对象变成一个字节数据--->序列化的过程
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream objectOutputStream = null;
-        try {
-            objectOutputStream = new ObjectOutputStream(baos);
-            objectOutputStream.writeObject(requestPayload);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return baos.toByteArray();
-
-    }
-
+    //使用工厂创建序列化器的设计模式
 }
+//    /**
+//     * 将对象转换成字节数组
+//     * @param requestPayload
+//     * @return
+//     */
+//    private byte[] getBodyBytes(RequestPayload requestPayload){
+//        if(requestPayload==null){
+//            return null;
+//        }
+//        // 对象变成一个字节数据--->序列化的过程
+//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//        ObjectOutputStream objectOutputStream = null;
+//        try {
+//            objectOutputStream = new ObjectOutputStream(baos);
+//            objectOutputStream.writeObject(requestPayload);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//        return baos.toByteArray();
+//
+//    }
+//
+//}

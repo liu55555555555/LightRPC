@@ -12,9 +12,8 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.ZooKeeper;
 
 import java.net.InetSocketAddress;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
+
 
 public class ZookeeperRegistry  extends AbstractRegistry implements Registry {
 
