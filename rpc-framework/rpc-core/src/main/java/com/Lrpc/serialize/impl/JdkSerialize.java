@@ -34,17 +34,19 @@ public class JdkSerialize implements Serialize {
 
     @Override
     public <T> T deserialize(byte[] bytes, Class<T> clazz) {
-        if(bytes == null || bytes.length == 0){
+        if(bytes == null || bytes.length == 0 || clazz == null){
             return null;
         }
         try(ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
             ObjectInputStream objectInputStream = new ObjectInputStream(bais);) {
             Object o = objectInputStream.readObject();
+            T t = (T) o;
             if(log.isDebugEnabled()){
                 log.debug("jdk反序列化【{}】成功", o);
             }
-            return (T) o;
+            return t;
         } catch (IOException | ClassNotFoundException e) {
+            log.error("jdk反序列化【{}】失败", clazz);
             throw new RuntimeException(e);
         }
     }

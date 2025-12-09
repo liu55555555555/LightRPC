@@ -42,6 +42,7 @@ public class LrpcBootstrap {
     //全局的id生成器
     public static final IdGenerator ID_GENERATOR = new IdGenerator(1,2);
 
+    // 默认序列化方式为jdk
     public static String SERIALIZE_TYPE = "jdk";
 
     //构造器私有化

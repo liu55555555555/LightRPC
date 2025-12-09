@@ -2,6 +2,7 @@ package com.Lrpc.serialize.impl;
 
 import com.Lrpc.Exception.SerializeException;
 import com.Lrpc.serialize.Serialize;
+import com.alibaba.fastjson2.JSON;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
@@ -15,20 +16,13 @@ public class JsonSerialize implements Serialize {
             return null;
         }
 
-        try(ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(baos);) {
+        byte[] jsonBytes = JSON.toJSONBytes(obj);
 
-            objectOutputStream.writeObject(obj);
-
-            byte[] ret = baos.toByteArray();
-            if(log.isDebugEnabled()){
-                log.debug("jdk序列化【{}】成功，序列化后的字节数为：【{}】", obj, ret.length);
-            }
-            return ret;
-        } catch (Exception e) {
-            log.error("jdk序列化【{}】失败", obj);
-            throw new SerializeException(e);
+        if(log.isDebugEnabled()){
+            log.debug("json序列化【{}】成功，序列化后的字节数为：【{}】", obj, jsonBytes.length);
         }
+
+        return jsonBytes;
 
     }
 
@@ -37,15 +31,13 @@ public class JsonSerialize implements Serialize {
         if(bytes == null || bytes.length == 0){
             return null;
         }
-        try(ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-            ObjectInputStream objectInputStream = new ObjectInputStream(bais);) {
-            Object o = objectInputStream.readObject();
-            if(log.isDebugEnabled()){
-                log.debug("jdk反序列化【{}】成功", o);
-            }
-            return (T) o;
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
+
+        T t = JSON.parseObject(bytes, clazz);
+
+        if(log.isDebugEnabled()){
+            log.debug("json反序列化【{}】成功", clazz);
         }
+
+        return t;
     }
 }
