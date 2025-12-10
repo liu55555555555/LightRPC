@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class LrpcBootstrap {
 
+
     private String appName;
     private RegistryConfig registryConfig;
     private ProtocolConfig protocolConfig;
@@ -44,6 +45,9 @@ public class LrpcBootstrap {
 
     // 默认序列化方式为jdk
     public static String SERIALIZE_TYPE = "jdk";
+
+    // 默认压缩方式为gzip
+    public static String COMPRESS_TYPE = "gzip";
 
     //构造器私有化
     private LrpcBootstrap(){
@@ -188,6 +192,14 @@ public class LrpcBootstrap {
         SERIALIZE_TYPE = serializeType;
         if(log.isDebugEnabled()){
             log.debug("当前工程使用了：{}协议进行序列化。",serializeType);
+        }
+        return this;
+    }
+
+    public LrpcBootstrap compress(String compressType) {
+        COMPRESS_TYPE = compressType;
+        if(log.isDebugEnabled()){
+            log.debug("当前工程使用了：{}压缩算法进行压缩。",compressType);
         }
         return this;
     }

@@ -1,6 +1,8 @@
 package com.Lrpc.ChannelHandler.handler;
 
 import com.Lrpc.LrpcBootstrap;
+import com.Lrpc.compress.CompressFactory;
+import com.Lrpc.compress.Compressor;
 import com.Lrpc.serialize.Serialize;
 import com.Lrpc.serialize.SerializerFactory;
 import com.Lrpc.serialize.impl.JdkSerialize;
@@ -43,12 +45,16 @@ public class LrpcRequestEncoder extends MessageToByteEncoder<LrpcRequest>{
 
         //写入请求体,如果是心跳检测则不写入请求体
         // 1.根据配置的序列化方式进行序列化
-        Serialize serialize = SerializerFactory.getStringSerialize(LrpcBootstrap.SERIALIZE_TYPE).getSerialize();
+        Serialize serialize = SerializerFactory.getByteSerialize(lrpcRequest.getSerializeType()).getSerialize();
         byte[] bodyBytes = serialize.serialize(lrpcRequest.getRequestPayload());
+        // 2.根据配置的压缩方式进行压缩
+        Compressor compressor = CompressFactory.getByteCompressWrapper(lrpcRequest.getCompressType()).getCompressor();
+        bodyBytes = compressor.compress(bodyBytes);
+
+        // 3.写入请求体
         if(bodyBytes != null){
             byteBuf.writeBytes(bodyBytes);
         }
-        // 2.根据配置的压缩方式进行压缩
 
         int bodyLength = bodyBytes == null ? 0 : bodyBytes.length;
 

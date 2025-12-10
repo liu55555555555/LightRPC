@@ -3,10 +3,14 @@ package com.Lrpc.serialize;
 import com.Lrpc.serialize.impl.HessianSerialize;
 import com.Lrpc.serialize.impl.JdkSerialize;
 import com.Lrpc.serialize.impl.JsonSerialize;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+@Slf4j
+// todo 修改完善工厂方法
 public class SerializerFactory {
     private static final ConcurrentHashMap<String,SerializeWrapper> STRING_SERIALIZE_WRAPPER_CACHE = new ConcurrentHashMap<>(8);
     private static final ConcurrentHashMap<Byte,SerializeWrapper> BYTE_SERIALIZE_WRAPPER_CACHE = new ConcurrentHashMap<>(8);
@@ -21,10 +25,23 @@ public class SerializerFactory {
     }
 
     public static SerializeWrapper getStringSerialize(String serializeName){
-        return STRING_SERIALIZE_WRAPPER_CACHE.get(serializeName);
+
+        SerializeWrapper serializeWrapper = STRING_SERIALIZE_WRAPPER_CACHE.get(serializeName);
+        if(serializeWrapper == null){
+            log.warn("未找到对应的序列化方式【{}】，使用默认的【{}】",serializeName,"hessian");
+            return STRING_SERIALIZE_WRAPPER_CACHE.get("hessian");
+        }
+
+        return serializeWrapper;
     }
 
     public static SerializeWrapper getByteSerialize(byte serializeCode){
-        return BYTE_SERIALIZE_WRAPPER_CACHE.get(serializeCode);
+        SerializeWrapper serializeWrapper = BYTE_SERIALIZE_WRAPPER_CACHE.get(serializeCode);
+        if(serializeWrapper == null){
+            log.warn("未找到对应编号的序列化方式【{}】，使用默认的【{}】",serializeCode,"hessian");
+            return BYTE_SERIALIZE_WRAPPER_CACHE.get((byte)3);
+        }
+        return serializeWrapper;
     }
+
 }

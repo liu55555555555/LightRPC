@@ -21,7 +21,8 @@ public class ConsumerApplication {
                 .application("first-consumer")
                 .register(new RegistryConfig("zookeeper://127.0.0.1:2181"))
                 .reference(reference)
-                .serialize("hessian");
+                .serialize("hessian")
+                .compress("gzip");
 
         //获取一个代理对象
         sayHello hello=reference.get();

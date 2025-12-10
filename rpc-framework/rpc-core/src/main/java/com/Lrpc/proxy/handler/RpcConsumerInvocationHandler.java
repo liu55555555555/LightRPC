@@ -4,6 +4,7 @@ import com.Lrpc.Exception.DiscoveryException;
 import com.Lrpc.Exception.NetworkException;
 import com.Lrpc.LrpcBootstrap;
 import com.Lrpc.NettyBootStrapInitializer;
+import com.Lrpc.compress.CompressFactory;
 import com.Lrpc.discovery.Registry;
 import com.Lrpc.enumeration.RequestType;
 import com.Lrpc.serialize.SerializerFactory;
@@ -69,7 +70,7 @@ public class RpcConsumerInvocationHandler  implements InvocationHandler {
         //将要传输的东西先封装成对象，经过outHandler时被handler处理成二进制报文。
         LrpcRequest lrpcRequest = LrpcRequest.builder()
                 .requestId(LrpcBootstrap.ID_GENERATOR.getId())
-                .compressType((byte) 1)
+                .compressType(CompressFactory.getStringCompressWrapper(LrpcBootstrap.COMPRESS_TYPE).getCode())
                 .serializeType(SerializerFactory.getStringSerialize(LrpcBootstrap.SERIALIZE_TYPE).getCode())
                 .requestType(RequestType.REQUEST.getId())
                 .requestPayload(RequestPayload.builder()

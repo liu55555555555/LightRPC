@@ -1,5 +1,7 @@
 package com.Lrpc.ChannelHandler.handler;
 
+import com.Lrpc.compress.CompressFactory;
+import com.Lrpc.compress.Compressor;
 import com.Lrpc.serialize.Serialize;
 import com.Lrpc.serialize.SerializerFactory;
 import com.Lrpc.transport.message.LrpcRequest;
@@ -60,11 +62,15 @@ public class LrpcResponseEncoder extends MessageToByteEncoder<LrpcResponse> {
         // 8字节的请求id
         byteBuf.writeLong(lrpcResponse.getRequestId());
 
-        // todo 压缩
 
         // 序列化 写入请求体,如果是心跳检测则不写入请求体
         Serialize serialize = SerializerFactory.getByteSerialize(lrpcResponse.getSerializeType()).getSerialize();
         byte[] bodyBytes = serialize.serialize(lrpcResponse.getResponseBody());
+
+        //  压缩
+        Compressor compressor = CompressFactory.getByteCompressWrapper(lrpcResponse.getCompressType()).getCompressor();
+        bodyBytes = compressor.compress(bodyBytes);
+
         if (bodyBytes != null) {
             byteBuf.writeBytes(bodyBytes);
         }

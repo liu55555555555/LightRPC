@@ -1,5 +1,7 @@
 package com.Lrpc.ChannelHandler.handler;
 
+import com.Lrpc.compress.CompressFactory;
+import com.Lrpc.compress.Compressor;
 import com.Lrpc.enumeration.RequestType;
 import com.Lrpc.serialize.Serialize;
 import com.Lrpc.serialize.SerializerFactory;
@@ -101,7 +103,9 @@ public class LrpcResponseDecoder extends LengthFieldBasedFrameDecoder {
         byte[] body = new byte[bodyLength];
         byteBuf.readBytes(body);
 
-        // todo 10.解压缩
+        //  10.解压缩
+        Compressor compressor = CompressFactory.getByteCompressWrapper(compressType).getCompressor();
+        body = compressor.decompress(body);
 
         // 11.反序列化
         Serialize serialize = SerializerFactory.getByteSerialize(serializeType).getSerialize();
