@@ -1,8 +1,8 @@
-package com.Lrpc.ChannelHandler;
+package com.Lrpc.channelhandler;
 
-import com.Lrpc.ChannelHandler.handler.LrpcRequestEncoder;
-import com.Lrpc.ChannelHandler.handler.LrpcResponseDecoder;
-import com.Lrpc.ChannelHandler.handler.MySimpleChannelInboundHandler;
+import com.Lrpc.channelhandler.handler.LrpcRequestEncoder;
+import com.Lrpc.channelhandler.handler.LrpcResponseDecoder;
+import com.Lrpc.channelhandler.handler.MySimpleChannelInboundHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.logging.LogLevel;

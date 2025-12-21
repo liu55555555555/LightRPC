@@ -1,11 +1,8 @@
 package com.Lrpc;
 
-import com.Lrpc.ChannelHandler.ConsumerChannelInitializer;
-import com.Lrpc.ChannelHandler.handler.MySimpleChannelInboundHandler;
+import com.Lrpc.channelhandler.ConsumerChannelInitializer;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 

@@ -1,4 +1,4 @@
-package com.Lrpc.ChannelHandler.handler;
+package com.Lrpc.channelhandler.handler;
 
 import com.Lrpc.LrpcBootstrap;
 import com.Lrpc.ServiceConfig;

@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -42,31 +43,9 @@ public class RpcConsumerInvocationHandler  implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-//        log.info("method--->{}", method);
-//        log.info("args--->{}", args);
-        //通过method获取方法名，通过args获取参数列表
 
 
-        //1.发现服务，从注册中心寻找一个可用的服务（实际获取的就是可用服务的地址）
-        InetSocketAddress serverAddress = registry.lookup(interfaceClass.getName());//调用方法返回一个InetSocketAddress对象，其中将ip地址和端口号封装在InetSocketAddress对象里了
-        if(log.isDebugEnabled()){
-            log.debug("从注册中心发现服务：{}的可用主机：[{}]",interfaceClass.getName(),serverAddress);
-        }
-
-
-        //2.用netty链接服务器，发送 封装好的调用的服务的 名字、方法名字、参数列表，得到结果
-        //q:整个链接过程放在这里行不行，也就意味着每次调用都会产生一个新的netty链接。   解决：缓存我们的channel链接，先尝试从缓存中获取channel，如果没有，在创建新的连接，并进行缓存。
-        //        不正确的代码：NioEventLoopGroup group = new NioEventLoopGroup();
-        //        也就是说每次在此处建立一个新的连接是不合适的
-
-
-        //2.1获取可用的channel
-        Channel channel = getAvailableChannel(serverAddress);
-        if(log.isDebugEnabled()){
-            log.debug("已与服务[{}]建立通信，准备发送数据",serverAddress);
-        }
-
-        //2.2封装报文
+        //1.封装报文
         //将要传输的东西先封装成对象，经过outHandler时被handler处理成二进制报文。
         LrpcRequest lrpcRequest = LrpcRequest.builder()
                 .requestId(LrpcBootstrap.ID_GENERATOR.getId())
@@ -81,6 +60,29 @@ public class RpcConsumerInvocationHandler  implements InvocationHandler {
                         .returnType(method.getReturnType())
                         .build())
                 .build();
+
+        // 将请求存入本地线程，需要在合适的时候remove
+        LrpcBootstrap.REQUEST_THREAD_LOCAL.set(lrpcRequest);
+
+
+        //2.发现服务，从注册中心寻找一个可用的服务（实际获取的就是可用服务的地址）
+        InetSocketAddress serverAddress = LrpcBootstrap.LOAD_BALANCER.selectServiceAddress(interfaceClass.getName());
+        if(log.isDebugEnabled()){
+            log.debug("从注册中心发现服务：{}的可用主机：[{}]",interfaceClass.getName(),serverAddress);
+        }
+
+
+        //2.用netty链接服务器，发送 封装好的调用的服务的 名字、方法名字、参数列表，得到结果
+        //q:整个链接过程放在这里行不行，也就意味着每次调用都会产生一个新的netty链接。   解决：缓存我们的channel链接，先尝试从缓存中获取channel，如果没有，在创建新的连接，并进行缓存。
+        //        不正确的代码：NioEventLoopGroup group = new NioEventLoopGroup();
+        //        也就是说每次在此处建立一个新的连接是不合适的
+
+
+        //2.1获取可用的netty的channel
+        Channel channel = getAvailableChannel(serverAddress);
+        if(log.isDebugEnabled()){
+            log.debug("已与服务[{}]建立通信，准备发送数据",serverAddress);
+        }
 
 
         /**
@@ -98,7 +100,7 @@ public class RpcConsumerInvocationHandler  implements InvocationHandler {
         /**
          * 异步策略---------------------------------------------------------------------------------------
          */
-        //2.3 写出报文
+        //2.2 写出报文
         CompletableFuture<Object> completableFuture = new CompletableFuture<>();
         // 将completableFuture暴露出去
         LrpcBootstrap.PENDING_REQUESTS.put(1L,completableFuture);
@@ -122,6 +124,9 @@ public class RpcConsumerInvocationHandler  implements InvocationHandler {
                         completableFuture.completeExceptionally(promise.cause());
                     }
                 });
+
+        // 移除线程变量
+        LrpcBootstrap.REQUEST_THREAD_LOCAL.remove();
 
         //3. 获得响应的结果
         //如果没有处理这个 completableFuture ， 这里会阻塞，等待complete方法的执行
@@ -180,6 +185,7 @@ public class RpcConsumerInvocationHandler  implements InvocationHandler {
             //存入缓存
             LrpcBootstrap.CHANNEL_CACHE.put(serverAddress,channel);
         }
+        log.debug("获取通道成功[{}]",serverAddress);
         if(channel ==  null){
             log.debug("获取通道时[{}]发生了异常",serverAddress);
             throw new NetworkException("获取通道时发生了异常");

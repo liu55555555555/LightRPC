@@ -1,26 +1,20 @@
-package com.Lrpc.ChannelHandler.handler;
+package com.Lrpc.channelhandler.handler;
 
 import com.Lrpc.compress.CompressFactory;
 import com.Lrpc.compress.Compressor;
-import com.Lrpc.enumeration.RequestType;
 import com.Lrpc.serialize.Serialize;
 import com.Lrpc.serialize.SerializerFactory;
-import com.Lrpc.transport.message.LrpcRequest;
+import com.Lrpc.transport.message.LrpcResponse;
 import com.Lrpc.transport.message.MessageFormatConstant;
-import com.Lrpc.transport.message.RequestPayload;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-
 @Slf4j
-public class LrpcRequestDecoder extends LengthFieldBasedFrameDecoder {
+public class LrpcResponseDecoder extends LengthFieldBasedFrameDecoder {
 
-    public LrpcRequestDecoder() {
+    public LrpcResponseDecoder() {
         // 调用这个父类的构造方法为了：找到当前报文的总长度，截取报文，截取出来的报文我们可以进行解析
         super(
                 // 最大帧的长度，超过这个maxFrameLength值会直接丢弃掉
@@ -70,8 +64,8 @@ public class LrpcRequestDecoder extends LengthFieldBasedFrameDecoder {
         // 4、解析总长度
         int fullLength = byteBuf.readInt();
 
-        // 5、请求类型todo 判断是不是心跳检测
-        byte requestType = byteBuf.readByte();
+        // 5、响应码
+        byte responseCode = byteBuf.readByte();
 
         // 6、序列化类型
         byte serializeType = byteBuf.readByte();
@@ -84,37 +78,37 @@ public class LrpcRequestDecoder extends LengthFieldBasedFrameDecoder {
 
 
         // 封装
-        LrpcRequest lrpcRequest = LrpcRequest.builder()
+        LrpcResponse lrpcResponse = LrpcResponse.builder()
                 .requestId(requestId)
-                .requestType(requestType)
                 .compressType(compressType)
                 .serializeType(serializeType)
+                .code(responseCode)
                 .build();
 
-        // 心跳请求没有负载，此处可以判断并直接返回
-        if( requestType == RequestType.HEART_BEAT.getId()){
-            return lrpcRequest;
-        }
+
+//        // todo 心跳请求没有负载，此处可以判断并直接返回
+//        if( requestType == RequestType.HEART_BEAT.getId()){
+//            return lrpcRequest;
+//        }
 
         // 9、请求体
-        int payloadLength = fullLength - headLength;
-        byte[] payload = new byte[payloadLength];
-        byteBuf.readBytes(payload);
+        int bodyLength = fullLength - headLength;
+        byte[] body = new byte[bodyLength];
+        byteBuf.readBytes(body);
 
-        // 10.解压缩
+        //  10.解压缩
         Compressor compressor = CompressFactory.getByteCompressWrapper(compressType).getCompressor();
-        payload = compressor.decompress(payload);
+        body = compressor.decompress(body);
 
         // 11.反序列化
         Serialize serialize = SerializerFactory.getByteSerialize(serializeType).getSerialize();
-        RequestPayload requestPayload = serialize.deserialize(payload, RequestPayload.class);
-
-        lrpcRequest.setRequestPayload(requestPayload);
+        Object responseBody = serialize.deserialize(body, Object.class);
+        lrpcResponse.setResponseBody(responseBody);
 
         if(log.isDebugEnabled()){
-            log.debug("请求【{}】已经在服务端完成报文的解码。", requestId);
+            log.debug("响应【{}】已经在客户端完成解码",lrpcResponse.getRequestId());
         }
 
-        return lrpcRequest;
+        return lrpcResponse;
     }
 }

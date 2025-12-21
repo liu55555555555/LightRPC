@@ -26,8 +26,12 @@ public class ConsumerApplication {
 
         //获取一个代理对象
         sayHello hello=reference.get();
-        String s = hello.HelloRPC("你好");
-        log.info("HelloRPC--->{}",s);
+
+        for (int i = 0; i < 10; i++) {
+            String s = hello.HelloRPC("你好");
+            log.info("HelloRPC--->{}",s);
+        }
+
 
 
     }

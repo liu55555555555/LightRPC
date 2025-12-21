@@ -2,6 +2,7 @@ package com.Lrpc.discovery.impl;
 
 import com.Lrpc.Constant;
 import com.Lrpc.Exception.DiscoveryException;
+import com.Lrpc.LrpcBootstrap;
 import com.Lrpc.ServiceConfig;
 import com.Lrpc.discovery.AbstractRegistry;
 import com.Lrpc.discovery.Registry;
@@ -44,7 +45,7 @@ public class ZookeeperRegistry  extends AbstractRegistry implements Registry {
         //ip我们通常时需要一个局域网ip，不是127.0.0.1，也不是ipv6
         //需要像192.168.12.123这样的
         //todo：全局端口处理
-        ZookeeperNode node = new ZookeeperNode(parentNode + "/" + NetUtils.getIp() + ":" + 8088, null);
+        ZookeeperNode node = new ZookeeperNode(parentNode + "/" + NetUtils.getIp() + ":" + LrpcBootstrap.PORT, null);
         if(!ZookeeperUtils.exists(zookeeper, node.getPath(),null)){
             ZookeeperUtils.createNode(zookeeper, node,null, CreateMode.EPHEMERAL);
         }
@@ -53,12 +54,12 @@ public class ZookeeperRegistry  extends AbstractRegistry implements Registry {
 
 
     /**
-     * 发现服务
+     * 注册中心的核心目的是：拉取合适的服务列表（一个服务会注册多个服务列表）
      * @param serviceName 服务的名称
-     * @return
+     * @return 返回服务列表
      */
     @Override
-    public InetSocketAddress lookup(String serviceName) {
+    public List<InetSocketAddress> lookup(String serviceName) {
         //1.找到服务对应的节点
         String servicePath = Constant.BASE_PROVIDERS_PATH + "/" + serviceName;
         //2.从zk中获取子节点
@@ -75,6 +76,6 @@ public class ZookeeperRegistry  extends AbstractRegistry implements Registry {
         }
         //todo q: 我们每次调用相关方法的时候都需要去注册中心拉取服务列表么？   本地缓存 + watcher
         //        我们如何合理的选择一个可用的服务，而不是只获取第一个？       负载均衡策略
-        return inetSocketAddresses.get(0);
+        return inetSocketAddresses;
     }
 }

@@ -11,6 +11,7 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.ZooKeeper;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 
 public class NocasRegistry  extends AbstractRegistry implements Registry {
         private ZooKeeper zookeeper;
@@ -44,7 +45,7 @@ public class NocasRegistry  extends AbstractRegistry implements Registry {
         }
 
     @Override
-    public InetSocketAddress lookup(String serviceName) {
+    public List<InetSocketAddress> lookup(String serviceName) {
         return null;
     }
 }
