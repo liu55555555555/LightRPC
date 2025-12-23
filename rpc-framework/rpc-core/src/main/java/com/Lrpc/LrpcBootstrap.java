@@ -3,6 +3,7 @@ package com.Lrpc;
 import com.Lrpc.channelhandler.handler.LrpcRequestDecoder;
 import com.Lrpc.channelhandler.handler.LrpcResponseEncoder;
 import com.Lrpc.channelhandler.handler.MethodCallHandler;
+import com.Lrpc.core.HeartbeatDetector;
 import com.Lrpc.discovery.Registry;
 import com.Lrpc.discovery.RegistryConfig;
 import com.Lrpc.loadbalancer.ConsistentHashBalancer;
@@ -21,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -37,9 +39,11 @@ public class LrpcBootstrap {
     public static LoadBalancer LOAD_BALANCER;
     // netty链接的缓存，如果使用InetSocketAddress这样的“类”做key，一定要看他有没有重写equals方法和toString方法
     public final static Map<InetSocketAddress, Channel> CHANNEL_CACHE = new ConcurrentHashMap<>(16);
+    public static final Map<Long,Channel> ANSWER_TIME_CHANNEL_CACHE = new TreeMap<>();
 
     //全局的服务列表：维护已经发布的服务列表 key -> interface的全限定名  value -> ServiceConfig<?>
     public static final Map<String,ServiceConfig<?>> SERVERS_LIST = new ConcurrentHashMap<>(16);
+
 
     //定义全局的对外挂起的 completableFuture
     public static final Map<Long,CompletableFuture<Object>> PENDING_REQUESTS = new ConcurrentHashMap<>(128);
@@ -187,6 +191,10 @@ public class LrpcBootstrap {
      * =======================================调用方的相关api============================================
      */
     public LrpcBootstrap reference(ReferenceConfig<?> reference) {
+
+        // 开启对这个服务的心跳检测
+        HeartbeatDetector.detectHeartbeat(reference.getInterfaceClass().getName());
+
         reference.setRegistry(register);
         if(log.isDebugEnabled()){
             log.debug("服务：{}已被引用",reference.getInterfaceClass().getName());

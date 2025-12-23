@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
- * 轮询负载均衡
+ * 一致性哈希负载均衡
  */
 @Slf4j
 public class ConsistentHashBalancer extends  AbstractLoadBalancer{

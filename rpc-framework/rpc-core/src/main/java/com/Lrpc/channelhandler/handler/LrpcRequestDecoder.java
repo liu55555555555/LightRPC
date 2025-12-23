@@ -13,6 +13,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Random;
+
 @Slf4j
 public class LrpcRequestDecoder extends LengthFieldBasedFrameDecoder {
 
@@ -34,6 +36,9 @@ public class LrpcRequestDecoder extends LengthFieldBasedFrameDecoder {
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
+
+        Thread.sleep(new Random().nextInt(50));
+
         Object decode = super.decode(ctx, in);
         if(decode instanceof ByteBuf byteBuf){
             return decodeFrame(byteBuf);
@@ -98,14 +103,18 @@ public class LrpcRequestDecoder extends LengthFieldBasedFrameDecoder {
         byteBuf.readBytes(payload);
 
         // 10.解压缩
-        Compressor compressor = CompressFactory.getByteCompressWrapper(compressType).getCompressor();
-        payload = compressor.decompress(payload);
+        if (payload != null && payload.length != 0){
+            Compressor compressor = CompressFactory.getByteCompressWrapper(compressType).getCompressor();
+            payload = compressor.decompress(payload);
 
-        // 11.反序列化
-        Serialize serialize = SerializerFactory.getByteSerialize(serializeType).getSerialize();
-        RequestPayload requestPayload = serialize.deserialize(payload, RequestPayload.class);
+            // 11.反序列化
+            Serialize serialize = SerializerFactory.getByteSerialize(serializeType).getSerialize();
+            RequestPayload requestPayload = serialize.deserialize(payload, RequestPayload.class);
+            lrpcRequest.setRequestPayload(requestPayload);
+        }
 
-        lrpcRequest.setRequestPayload(requestPayload);
+
+
 
         if(log.isDebugEnabled()){
             log.debug("请求【{}】已经在服务端完成报文的解码。", requestId);

@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -52,6 +53,7 @@ public class RpcConsumerInvocationHandler  implements InvocationHandler {
                 .compressType(CompressFactory.getStringCompressWrapper(LrpcBootstrap.COMPRESS_TYPE).getCode())
                 .serializeType(SerializerFactory.getStringSerialize(LrpcBootstrap.SERIALIZE_TYPE).getCode())
                 .requestType(RequestType.REQUEST.getId())
+                .timeStamp(new Date().getTime())
                 .requestPayload(RequestPayload.builder()
                         .interfaceName(interfaceClass.getName())
                         .methodName(method.getName())
@@ -103,7 +105,7 @@ public class RpcConsumerInvocationHandler  implements InvocationHandler {
         //2.2 写出报文
         CompletableFuture<Object> completableFuture = new CompletableFuture<>();
         // 将completableFuture暴露出去
-        LrpcBootstrap.PENDING_REQUESTS.put(1L,completableFuture);
+        LrpcBootstrap.PENDING_REQUESTS.put(lrpcRequest.getRequestId(),completableFuture);
 
 
         //这里直接 writeAndFlush 写出一个请求，这个请求的实例就会进入pipeline执行出站的一系列操作

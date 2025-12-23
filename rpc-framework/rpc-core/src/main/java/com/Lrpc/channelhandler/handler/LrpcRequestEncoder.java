@@ -35,14 +35,19 @@ public class LrpcRequestEncoder extends MessageToByteEncoder<LrpcRequest>{
         byteBuf.writeByte(lrpcRequest.getCompressType());// 3.压缩类型
         // 8字节的请求id
         byteBuf.writeLong(lrpcRequest.getRequestId());
+//        byteBuf.writeLong(lrpcRequest.getTimeStamp());
 
-        //写入请求体,如果是心跳检测则不写入请求体
-        // 1.根据配置的序列化方式进行序列化
-        Serialize serialize = SerializerFactory.getByteSerialize(lrpcRequest.getSerializeType()).getSerialize();
-        byte[] bodyBytes = serialize.serialize(lrpcRequest.getRequestPayload());
-        // 2.根据配置的压缩方式进行压缩
-        Compressor compressor = CompressFactory.getByteCompressWrapper(lrpcRequest.getCompressType()).getCompressor();
-        bodyBytes = compressor.compress(bodyBytes);
+        byte[] bodyBytes=null;
+        if(lrpcRequest.getRequestPayload() != null){
+
+            //写入请求体,如果是心跳检测则不写入请求体
+            // 1.根据配置的序列化方式进行序列化
+            Serialize serialize = SerializerFactory.getByteSerialize(lrpcRequest.getSerializeType()).getSerialize();
+            bodyBytes = serialize.serialize(lrpcRequest.getRequestPayload());
+            // 2.根据配置的压缩方式进行压缩
+            Compressor compressor = CompressFactory.getByteCompressWrapper(lrpcRequest.getCompressType()).getCompressor();
+            bodyBytes = compressor.compress(bodyBytes);
+        }
 
         // 3.写入请求体
         if(bodyBytes != null){

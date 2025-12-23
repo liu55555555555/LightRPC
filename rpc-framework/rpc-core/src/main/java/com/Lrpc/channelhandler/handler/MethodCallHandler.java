@@ -2,6 +2,7 @@ package com.Lrpc.channelhandler.handler;
 
 import com.Lrpc.LrpcBootstrap;
 import com.Lrpc.ServiceConfig;
+import com.Lrpc.enumeration.RequestType;
 import com.Lrpc.enumeration.RespCode;
 import com.Lrpc.transport.message.LrpcRequest;
 import com.Lrpc.transport.message.LrpcResponse;
@@ -22,7 +23,11 @@ public class MethodCallHandler extends SimpleChannelInboundHandler<LrpcRequest> 
         RequestPayload requestPayload = lrpcRequest.getRequestPayload();
 
         // 2.根据负载内容进行方法调用
-        Object result = callTargetMethod(requestPayload);
+        Object result = null;
+        if(lrpcRequest.getRequestType() == RequestType.REQUEST.getId()){
+            result = callTargetMethod(requestPayload);
+        }
+
 
         if(log.isDebugEnabled()){
             log.debug("请求【{}】已经完成在服务端的方法调用",lrpcRequest.getRequestId());

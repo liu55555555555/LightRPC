@@ -56,14 +56,17 @@ public class LrpcResponseEncoder extends MessageToByteEncoder<LrpcResponse> {
         // 8字节的请求id
         byteBuf.writeLong(lrpcResponse.getRequestId());
 
-
+        byte[] bodyBytes = null;
         // 序列化 写入请求体,如果是心跳检测则不写入请求体
-        Serialize serialize = SerializerFactory.getByteSerialize(lrpcResponse.getSerializeType()).getSerialize();
-        byte[] bodyBytes = serialize.serialize(lrpcResponse.getResponseBody());
+        if(lrpcResponse.getResponseBody() != null){
+            Serialize serialize = SerializerFactory.getByteSerialize(lrpcResponse.getSerializeType()).getSerialize();
+            bodyBytes = serialize.serialize(lrpcResponse.getResponseBody());
 
-        //  压缩
-        Compressor compressor = CompressFactory.getByteCompressWrapper(lrpcResponse.getCompressType()).getCompressor();
-        bodyBytes = compressor.compress(bodyBytes);
+            //  压缩
+            Compressor compressor = CompressFactory.getByteCompressWrapper(lrpcResponse.getCompressType()).getCompressor();
+            bodyBytes = compressor.compress(bodyBytes);
+        }
+
 
         if (bodyBytes != null) {
             byteBuf.writeBytes(bodyBytes);
