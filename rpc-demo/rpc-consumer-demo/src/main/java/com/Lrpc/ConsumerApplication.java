@@ -1,6 +1,5 @@
 package com.Lrpc;
 
-import com.Lrpc.core.HeartbeatDetector;
 import com.Lrpc.discovery.RegistryConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -41,6 +41,7 @@ public class HeartbeatDetector {
                 }
         });
 
+        log.info("----------------------定时任务----------------------");
         // 3.定时任务，定期发送消息(但是我们不能让主线程阻塞在这里去发心跳请求，我们先另外开一个新线程去处理这个)
         Thread thread = new Thread(() -> new Timer().scheduleAtFixedRate(new MyTimerTask(), 0, 2000), "lrpc-heartbeatDetector-thread");
         thread.setDaemon( true);//设置为守护线程
@@ -53,7 +54,9 @@ public class HeartbeatDetector {
         @Override
         public void run() {
 
-            // 将响应时长的map进行清空
+            //todo 这里所有的线程都会操作同一个ANSWER_TIME_CHANNEL_CACHE
+
+            // 将响应时长的map进行清空(如果不清空：旧数据会一直累积，影响实时性判断。)(是的我们每次发起请求都要重新记录一下每个节点的响应时间，之前的响应时间map删了就行)
             LrpcBootstrap.ANSWER_TIME_CHANNEL_CACHE.clear();
 
             Map<InetSocketAddress, Channel> channelCache = LrpcBootstrap.CHANNEL_CACHE;
@@ -92,6 +95,12 @@ public class HeartbeatDetector {
                 LrpcBootstrap.ANSWER_TIME_CHANNEL_CACHE.put(time, channel);
                 log.debug("和【{}】服务的响应的时间是【{}】",entry.getKey(),time);
 
+            }
+
+            for(Map.Entry<Long,Channel> node:LrpcBootstrap.ANSWER_TIME_CHANNEL_CACHE.entrySet()){
+                if(log.isDebugEnabled()){
+                    log.debug("和【{}】服务的响应时间是【{}】",node.getValue().remoteAddress(),node.getKey());
+                }
             }
         }
     }

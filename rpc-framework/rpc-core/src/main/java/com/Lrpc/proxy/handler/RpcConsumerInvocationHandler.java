@@ -53,7 +53,6 @@ public class RpcConsumerInvocationHandler  implements InvocationHandler {
                 .compressType(CompressFactory.getStringCompressWrapper(LrpcBootstrap.COMPRESS_TYPE).getCode())
                 .serializeType(SerializerFactory.getStringSerialize(LrpcBootstrap.SERIALIZE_TYPE).getCode())
                 .requestType(RequestType.REQUEST.getId())
-                .timeStamp(new Date().getTime())
                 .requestPayload(RequestPayload.builder()
                         .interfaceName(interfaceClass.getName())
                         .methodName(method.getName())

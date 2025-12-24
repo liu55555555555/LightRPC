@@ -8,7 +8,7 @@ import com.Lrpc.discovery.Registry;
 import com.Lrpc.discovery.RegistryConfig;
 import com.Lrpc.loadbalancer.ConsistentHashBalancer;
 import com.Lrpc.loadbalancer.LoadBalancer;
-import com.Lrpc.loadbalancer.RoundRobinLoadBalancer;
+import com.Lrpc.loadbalancer.MinTimeBalancer;
 import com.Lrpc.transport.message.LrpcRequest;
 import com.Lrpc.utils.IdGenerator;
 import io.netty.bootstrap.ServerBootstrap;
@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LrpcBootstrap {
 
 
-    public static final int PORT = 8092;
+    public static final int PORT = 8090;
     private String appName;
     private RegistryConfig registryConfig;
     private ProtocolConfig protocolConfig;
@@ -39,7 +39,7 @@ public class LrpcBootstrap {
     public static LoadBalancer LOAD_BALANCER;
     // netty链接的缓存，如果使用InetSocketAddress这样的“类”做key，一定要看他有没有重写equals方法和toString方法
     public final static Map<InetSocketAddress, Channel> CHANNEL_CACHE = new ConcurrentHashMap<>(16);
-    public static final Map<Long,Channel> ANSWER_TIME_CHANNEL_CACHE = new TreeMap<>();
+    public static final TreeMap<Long,Channel> ANSWER_TIME_CHANNEL_CACHE = new TreeMap<>();
 
     //全局的服务列表：维护已经发布的服务列表 key -> interface的全限定名  value -> ServiceConfig<?>
     public static final Map<String,ServiceConfig<?>> SERVERS_LIST = new ConcurrentHashMap<>(16);
@@ -93,7 +93,7 @@ public class LrpcBootstrap {
         //尝试用 registryConfig 获取一个注册中心，有点工厂设计模式的意思了
         this.register = registryConfig.getRegistry();
         // todo 修改
-        LOAD_BALANCER = new ConsistentHashBalancer();
+        LOAD_BALANCER = new MinTimeBalancer();
         return this;
     }
 
