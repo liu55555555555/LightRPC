@@ -38,17 +38,15 @@ public class MinTimeBalancer extends  AbstractLoadBalancer{
         public InetSocketAddress getNext() {
             Map.Entry<Long, Channel> entry = LrpcBootstrap.ANSWER_TIME_CHANNEL_CACHE.firstEntry();
             if(entry!=null ){
+                if(log.isDebugEnabled()){
+                    log.debug("从缓存中拿到一个响应时间最短的服务节点【{}】",entry.getKey());
+                }
                 return (InetSocketAddress)entry.getValue().remoteAddress();
             }
             //直接从现有的服务节点的缓存中拿一个
             return LrpcBootstrap.CHANNEL_CACHE.entrySet().iterator().next().getKey();
-        }
-
-        @Override
-        public void reBalance() {
 
         }
-
 
 
 

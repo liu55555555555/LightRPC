@@ -58,15 +58,9 @@ public class RoundRobinLoadBalancer extends  AbstractLoadBalancer{
                 index.getAndIncrement();
             }
 
-
-
             return inetSocketAddress;
         }
 
-        @Override
-        public void reBalance() {
-
-        }
     }
 
 }

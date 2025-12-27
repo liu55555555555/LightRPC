@@ -71,10 +71,6 @@ public class ConsistentHashBalancer extends  AbstractLoadBalancer{
             return circle.get(hash);
         }
 
-        @Override
-        public void reBalance() {
-
-        }
 
         // --------------------------------------工具类方法--------------------------------------
 

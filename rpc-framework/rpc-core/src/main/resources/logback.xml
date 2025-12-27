@@ -10,9 +10,10 @@
         </encoder>
     </appender>
 
-    <!-- 只关注你的 RPC 框架日志 -->
-    <logger name="com.lightrpc" level="DEBUG" />
-    <logger name="com.Lrpc" level="DEBUG" /><!-- 这里的debug代表实际的开发代码中可以使用 log.debug输出日志了 -->
+<!--    &lt;!&ndash; 只关注你的 RPC 框架日志 &ndash;&gt;-->
+<!--    &lt;!&ndash; 这么配置的话基代表这些包下的日志输出等级是debug级别的，就算下面的根日志级别是info，这些包下的依旧是debug级别 &ndash;&gt;-->
+<!--    <logger name="com.lightrpc" level="DEBUG" />-->
+<!--    <logger name="com.Lrpc" level="DEBUG" />&lt;!&ndash; 这里的debug代表实际的开发代码中可以使用 log.debug输出日志了 &ndash;&gt;-->
 
     <!-- 根日志设为 WARN，减少第三方库噪音 -->
     <root level="debug">

@@ -86,10 +86,6 @@ public class LrpcResponseDecoder extends LengthFieldBasedFrameDecoder {
                 .build();
 
 
-//        // todo 心跳请求没有负载，此处可以判断并直接返回
-//        if( requestType == RequestType.HEART_BEAT.getId()){
-//            return lrpcRequest;
-//        }
 
         // 9、请求体
         int bodyLength = fullLength - headLength;

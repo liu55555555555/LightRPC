@@ -27,12 +27,20 @@ public class ConsumerApplication {
         //获取一个代理对象
         sayHello hello=reference.get();
 
-        for (int i = 0; i < 10; i++) {
-            String s = hello.HelloRPC("你好");
-            log.info("HelloRPC--->{}",s);
+        while(true) {
+            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            for (int i = 0; i < 10; i++) {
+                String s = hello.HelloRPC("你好");
+                log.info("HelloRPC--->{}", s);
+            }
+
         }
-
-
 
     }
 

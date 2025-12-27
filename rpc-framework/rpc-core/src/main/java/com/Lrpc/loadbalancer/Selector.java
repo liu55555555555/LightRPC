@@ -13,7 +13,5 @@ public interface Selector {
      */
     InetSocketAddress getNext();
 
-    // todo 服务动态上下线后，要重新负载均衡
-    void reBalance();
 
 }

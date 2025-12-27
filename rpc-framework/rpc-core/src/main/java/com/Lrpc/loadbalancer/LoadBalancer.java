@@ -1,6 +1,7 @@
 package com.Lrpc.loadbalancer;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 
 public interface LoadBalancer {
 
@@ -13,4 +14,10 @@ public interface LoadBalancer {
      */
      InetSocketAddress selectServiceAddress(String serviceName);
 
+     /**
+     * 当服务列表发生改变的时候，重新拉取服务列表
+     * @param serviceName
+     * @param addresses
+     */
+    void reLoadBalance(String serviceName, List<InetSocketAddress> addresses);
 }

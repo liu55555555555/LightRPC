@@ -13,12 +13,11 @@ import io.netty.channel.ChannelFutureListener;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Slf4j
 public class HeartbeatDetector {
@@ -41,7 +40,7 @@ public class HeartbeatDetector {
                 }
         });
 
-        log.info("----------------------定时任务----------------------");
+
         // 3.定时任务，定期发送消息(但是我们不能让主线程阻塞在这里去发心跳请求，我们先另外开一个新线程去处理这个)
         Thread thread = new Thread(() -> new Timer().scheduleAtFixedRate(new MyTimerTask(), 0, 2000), "lrpc-heartbeatDetector-thread");
         thread.setDaemon( true);//设置为守护线程
@@ -53,7 +52,7 @@ public class HeartbeatDetector {
     public static class MyTimerTask extends TimerTask {
         @Override
         public void run() {
-
+            log.info("----------------------定时任务----------------------");
             //todo 这里所有的线程都会操作同一个ANSWER_TIME_CHANNEL_CACHE
 
             // 将响应时长的map进行清空(如果不清空：旧数据会一直累积，影响实时性判断。)(是的我们每次发起请求都要重新记录一下每个节点的响应时间，之前的响应时间map删了就行)
@@ -61,39 +60,60 @@ public class HeartbeatDetector {
 
             Map<InetSocketAddress, Channel> channelCache = LrpcBootstrap.CHANNEL_CACHE;
             for(Map.Entry<InetSocketAddress,Channel> entry: channelCache.entrySet()){
-                Channel channel = entry.getValue();
+                int tryTime = 3;
+                while(tryTime>0){
+                    Channel channel = entry.getValue();
 
-                long start = System.currentTimeMillis();
-                LrpcRequest lrpcRequest = LrpcRequest.builder()
-                        .requestId(LrpcBootstrap.ID_GENERATOR.getId())
-                        .compressType(CompressFactory.getStringCompressWrapper(LrpcBootstrap.COMPRESS_TYPE).getCode())
-                        .serializeType(SerializerFactory.getStringSerialize(LrpcBootstrap.SERIALIZE_TYPE).getCode())
-                        .requestType(RequestType.HEART_BEAT.getId())
-                        .build();
+                    long start = System.currentTimeMillis();
+                    LrpcRequest lrpcRequest = LrpcRequest.builder()
+                            .requestId(LrpcBootstrap.ID_GENERATOR.getId())
+                            .compressType(CompressFactory.getStringCompressWrapper(LrpcBootstrap.COMPRESS_TYPE).getCode())
+                            .serializeType(SerializerFactory.getStringSerialize(LrpcBootstrap.SERIALIZE_TYPE).getCode())
+                            .requestType(RequestType.HEART_BEAT.getId())
+                            .build();
 
-                // 4.写出报文
-                CompletableFuture<Object> completableFuture = new CompletableFuture<>();
-                // 将completableFuture暴露出去
-                LrpcBootstrap.PENDING_REQUESTS.put(lrpcRequest.getRequestId(),completableFuture);
+                    // 4.写出报文
+                    CompletableFuture<Object> completableFuture = new CompletableFuture<>();
+                    // 将completableFuture暴露出去
+                    LrpcBootstrap.PENDING_REQUESTS.put(lrpcRequest.getRequestId(),completableFuture);
 
-                channel.writeAndFlush(lrpcRequest)
-                        .addListener((ChannelFutureListener) promise -> {
-                            if (!promise.isSuccess()) {
-                                completableFuture.completeExceptionally(promise.cause());
-                            }
-                        });
-                Long end = null;
-                try {
-                    completableFuture.get();
-                    end = System.currentTimeMillis();
-                } catch (InterruptedException | ExecutionException e) {
-                    throw new RuntimeException(e);
+                    channel.writeAndFlush(lrpcRequest)
+                            .addListener((ChannelFutureListener) promise -> {
+                                if (!promise.isSuccess()) {
+                                    completableFuture.completeExceptionally(promise.cause());
+                                }
+                            });
+                    long end = 0L;
+                    try {
+                        //单纯的只调用completableFuture.get()方法，那么这个线程就会阻塞在这里，直到completableFuture有结果或者异常。
+                        //我们添加参数，让他不要一直阻塞在这里
+                        completableFuture.get(1, TimeUnit.SECONDS);
+                        end = System.currentTimeMillis();
+                    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                        tryTime--;
+                        log.error("和地址为【{}】的主机连接发生异常,正在尝试第【{}】次重连",entry.getKey(),3-tryTime);
+                        if(tryTime==0){
+                            // 将失效的地址移除
+                            LrpcBootstrap.CHANNEL_CACHE.remove(entry.getKey());
+                        }
+
+                        // 每间隔一段时间再去重试
+                        try {
+                            Thread.sleep(10*(new Random().nextInt(5)));
+                        } catch (InterruptedException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                        continue;
+
+                    }
+
+                    Long time = end - start;
+                    // 使用treeMap进行缓存(自动排序)
+                    LrpcBootstrap.ANSWER_TIME_CHANNEL_CACHE.put(time, channel);
+                    log.debug("和【{}】服务的响应的时间是【{}】",entry.getKey(),time);
+                    break;
                 }
 
-                Long time = end - start;
-                // 使用treeMap进行缓存(自动排序)
-                LrpcBootstrap.ANSWER_TIME_CHANNEL_CACHE.put(time, channel);
-                log.debug("和【{}】服务的响应的时间是【{}】",entry.getKey(),time);
 
             }
 

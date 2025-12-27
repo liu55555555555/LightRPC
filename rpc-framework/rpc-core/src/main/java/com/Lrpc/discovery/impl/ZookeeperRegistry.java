@@ -9,7 +9,10 @@ import com.Lrpc.discovery.Registry;
 import com.Lrpc.utils.NetUtils;
 import com.Lrpc.utils.zookeeper.ZookeeperNode;
 import com.Lrpc.utils.zookeeper.ZookeeperUtils;
+import com.Lrpc.watch.UpAndDownWatcher;
 import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
 
 import java.net.InetSocketAddress;
@@ -63,7 +66,7 @@ public class ZookeeperRegistry  extends AbstractRegistry implements Registry {
         //1.找到服务对应的节点
         String servicePath = Constant.BASE_PROVIDERS_PATH + "/" + serviceName;
         //2.从zk中获取子节点
-        List<String> children = ZookeeperUtils.getChildren(zookeeper, servicePath, null);
+        List<String> children = ZookeeperUtils.getChildren(zookeeper, servicePath, new UpAndDownWatcher());
         //3.获取了所有的可用的服务列表，封装结果
         List<InetSocketAddress> inetSocketAddresses = children.stream().map(ipAndPort -> {
             String[] split = ipAndPort.split(":");
@@ -74,8 +77,7 @@ public class ZookeeperRegistry  extends AbstractRegistry implements Registry {
         if(inetSocketAddresses.isEmpty()){
             throw new DiscoveryException("未发现任何可用的服务主机");
         }
-        //todo q: 我们每次调用相关方法的时候都需要去注册中心拉取服务列表么？   本地缓存 + watcher
-        //        我们如何合理的选择一个可用的服务，而不是只获取第一个？       负载均衡策略
+
         return inetSocketAddresses;
     }
 }

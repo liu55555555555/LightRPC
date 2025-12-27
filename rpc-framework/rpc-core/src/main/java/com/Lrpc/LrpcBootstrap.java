@@ -9,6 +9,7 @@ import com.Lrpc.discovery.RegistryConfig;
 import com.Lrpc.loadbalancer.ConsistentHashBalancer;
 import com.Lrpc.loadbalancer.LoadBalancer;
 import com.Lrpc.loadbalancer.MinTimeBalancer;
+import com.Lrpc.loadbalancer.RoundRobinLoadBalancer;
 import com.Lrpc.transport.message.LrpcRequest;
 import com.Lrpc.utils.IdGenerator;
 import io.netty.bootstrap.ServerBootstrap;
@@ -30,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LrpcBootstrap {
 
 
-    public static final int PORT = 8090;
+    public static final int PORT = 8092;
     private String appName;
     private RegistryConfig registryConfig;
     private ProtocolConfig protocolConfig;
@@ -93,7 +94,7 @@ public class LrpcBootstrap {
         //尝试用 registryConfig 获取一个注册中心，有点工厂设计模式的意思了
         this.register = registryConfig.getRegistry();
         // todo 修改
-        LOAD_BALANCER = new MinTimeBalancer();
+        LOAD_BALANCER = new RoundRobinLoadBalancer();
         return this;
     }
 
