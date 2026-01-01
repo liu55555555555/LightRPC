@@ -26,7 +26,9 @@ public class ProviderApplication {
                 //配置序列化协议
                 .protocol(new ProtocolConfig("jdk"))
                 //发布服务到注册中心
-                .publish(service)
+//                .publish(service)
+                // 打包批量发布
+                .scan("com.Lrpc")
                 //启动服务
                 .start();
         //这里的链式调用相当于下面的代码

@@ -40,6 +40,19 @@ public class UpAndDownWatcher implements Watcher {
         for(Map.Entry<InetSocketAddress,Channel> entry: LrpcBootstrap.CHANNEL_CACHE.entrySet()){
             InetSocketAddress key = entry.getKey();
             if (!addresses.contains(key)){
+                Channel channel = entry.getValue();
+                // 先关闭channel，然后再从缓存中移除
+                if (channel != null && channel.isActive()) {
+                    try {
+                        channel.close().sync();
+                        if(log.isDebugEnabled()){
+                            log.debug("关闭下线节点【{}】的连接通道", key);
+                        }
+                    } catch (InterruptedException e) {
+                        log.error("关闭下线节点【{}】的连接通道时发生异常", key, e);
+                    }
+                }
+                // 从缓存中移除
                 LrpcBootstrap.CHANNEL_CACHE.remove(key);
             }
         }

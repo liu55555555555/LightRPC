@@ -1,5 +1,6 @@
 package com.Lrpc;
 
+import com.Lrpc.annotation.Api;
 import com.Lrpc.channelhandler.handler.LrpcRequestDecoder;
 import com.Lrpc.channelhandler.handler.LrpcResponseEncoder;
 import com.Lrpc.channelhandler.handler.MethodCallHandler;
@@ -20,12 +21,18 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class LrpcBootstrap {
@@ -227,4 +234,118 @@ public class LrpcBootstrap {
     public Registry getRegister() {
         return register;
     }
+
+
+
+    public LrpcBootstrap scan(String packageName){
+
+
+        // 1、通过packageName获取其下的所有类的权限定名称(包名.类名)
+        List<String> classNames = getAllClassNames(packageName);
+
+        // 2、通过反射获取他的接口，构建具体实现
+        List<Class<?>> classes = classNames.stream()
+                .map(className -> {
+                    try {
+                        return Class.forName(className);
+                    } catch (ClassNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).filter(clazz -> clazz.getAnnotation(Api.class) != null)
+                .collect(Collectors.toList());
+
+        for(Class<?> clazz : classes){
+            Class<?>[] interfaces = clazz.getInterfaces();
+            Object instance = null;
+            try {
+                instance = clazz.getConstructor().newInstance();
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                     NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
+            for(Class<?> anInterface : interfaces){
+                ServiceConfig<?> serviceConfig = new ServiceConfig<>();
+                serviceConfig.setInterfaceClass(anInterface);
+                serviceConfig.setRef(instance);
+
+                if (log.isDebugEnabled()){
+                    log.debug("服务：[{}]已被发布",anInterface.getName());
+                }
+
+
+                // 3、发布
+                publish(serviceConfig);
+            }
+
+        }
+
+
+        return  this;
+    }
+
+    private List<String> getAllClassNames(String packageName) {
+        // 1.通过packageName获取绝对路径
+        // com.Lrpc.xxx.yyy（包路径）------> E://xxx/xww/sss/com/lrpc/xxx/yyy
+        String basePath = packageName.replaceAll("\\.", "/");// 这里是正则表达式，\\.在java的字面量中转义成 \.然后这个\.在正则表达式中转义成正常的.符号本身的意思。
+        URL url = ClassLoader.getSystemClassLoader().getResource(basePath);
+        if(url == null){
+            throw new RuntimeException("包扫描时，未找到该包路径");
+        }
+        String absolutePath = url.getPath();
+        List<String> classNames = new ArrayList<>();
+        classNames = recursionFile(absolutePath, classNames, basePath);
+
+        return classNames;
+
+    }
+
+    private List<String> recursionFile(String absolutePath, List<String> classNames,String basePath) {
+        // 获取文件
+        File file = new File(absolutePath);// 根据文件的路径创建一个文件对象，后续用这个对象的方法可以获取文件名等信息
+
+        // 判断文件是否是文件夹
+        if(file.isDirectory()){
+            // 找到文件夹里的所有是文件夹的文件和以.class结尾的文件
+            File[] child = file.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File pathname) {
+                    return pathname.isDirectory() || pathname.getName().endsWith(".class");
+                }
+            });
+            for(File f:child){
+                if (f.isDirectory()){
+                    // 递归调用
+                    recursionFile(f.getAbsolutePath(),classNames,basePath);
+                }else{
+                    // 文件-->类的权限定名称
+                    String className = getClassNameByAbsolutePath(f.getAbsolutePath(),basePath);
+                    System.out.println(className);
+                    classNames.add(className);
+                }
+            }
+        }else{
+            // 文件-->类的权限定名称
+            String className = getClassNameByAbsolutePath(absolutePath,basePath);
+            System.out.println(className);
+            classNames.add(className);
+        }
+
+        return classNames;
+
+    }
+
+    private String getClassNameByAbsolutePath(String absolutePath,String basePath) {
+        // D:\Project\LightRPC\rpc-framework\rpc-core\target\classes\com\lrpc\transport\message\LrpcRequest.class------>
+        // com\lrpc\transport\message\LrpcRequest.class------> com.lrpc.transport.message.LrpcRequest
+        String fileName = absolutePath.substring(absolutePath.indexOf(basePath.replaceAll("/", "\\\\")))
+                .replaceAll("\\\\", ".");
+
+        fileName = fileName.substring(0,fileName.indexOf(".class"));
+        return fileName;
+    }
+
+    public static void main(String[] args) {
+        LrpcBootstrap.getInstance().getAllClassNames("com.Lrpc");
+    }
+
 }
