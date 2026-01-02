@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration SYSTEM "rpc-config.dtd">
+<configuration>
+
+    <port>8083</port>
+    <appName>lrpc-default-appName</appName>
+    <registry url="zookeeper://127.0.0.1:2181"/>
+
+    <!-- 二选一 -->
+    <serializeType type="hessian"/>
+    <serializer code="3" name="hession" class="com.Lrpc.serialize.impl.HessianSerialize"/>
+
+    <!-- 二选一 -->
+    <compressType type="gzip"/>
+    <compressor code="1" name="hession"  class="com.Lrpc.compress.Impl.GzipCompressor"/>
+
+    <!-- 二选一 -->
+    <loadBalancer class="com.Lrpc.loadbalancer.MinTimeBalancer"/>
+    <loadBalancerType type="minimumResponseTime"/>
+
+    <idGenerator class="com.Lrpc.utils.IdGenerator" dataCenterId="2" MachineId="4"/>
+
+</configuration>

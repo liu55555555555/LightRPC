@@ -48,7 +48,7 @@ public class ZookeeperRegistry  extends AbstractRegistry implements Registry {
         //ip我们通常时需要一个局域网ip，不是127.0.0.1，也不是ipv6
         //需要像192.168.12.123这样的
         //todo：全局端口处理
-        ZookeeperNode node = new ZookeeperNode(parentNode + "/" + NetUtils.getIp() + ":" + LrpcBootstrap.PORT, null);
+        ZookeeperNode node = new ZookeeperNode(parentNode + "/" + NetUtils.getIp() + ":" + LrpcBootstrap.getInstance().getConfiguration().getPort(), null);
         if(!ZookeeperUtils.exists(zookeeper, node.getPath(),null)){
             ZookeeperUtils.createNode(zookeeper, node,null, CreateMode.EPHEMERAL);
         }

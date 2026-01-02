@@ -23,8 +23,6 @@ public class ProviderApplication {
                 .application("first-provider-application")
                 //配置注册中心
                 .register(new RegistryConfig("zookeeper://127.0.0.1:2181"))//集群的话逗号跟上就行
-                //配置序列化协议
-                .protocol(new ProtocolConfig("jdk"))
                 //发布服务到注册中心
 //                .publish(service)
                 // 打包批量发布

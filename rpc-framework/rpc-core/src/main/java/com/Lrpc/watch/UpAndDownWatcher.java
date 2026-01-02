@@ -18,7 +18,7 @@ public class UpAndDownWatcher implements Watcher {
         if(log.isDebugEnabled()){
             log.debug("【{}】服务列表发生改变（有节点上/下线），将重新拉取服务列表", watchedEvent.getPath());
         }
-        List<InetSocketAddress> addresses = LrpcBootstrap.getInstance().getRegister().lookup(getServiceName(watchedEvent.getPath()));
+        List<InetSocketAddress> addresses = LrpcBootstrap.getInstance().getConfiguration().getRegistryConfig().getRegistry().lookup(getServiceName(watchedEvent.getPath()));
         // 新增的节点 在address中，不在CHANNEL_CACHE中
         // 下线的节点 可能会在CHANNEL_CACHE中，不在address中
 
@@ -58,7 +58,7 @@ public class UpAndDownWatcher implements Watcher {
         }
 
         // 重新加载负载均衡器
-        LrpcBootstrap.LOAD_BALANCER.reLoadBalance(getServiceName(watchedEvent.getPath()),addresses);
+        LrpcBootstrap.getInstance().getConfiguration().getLoadBalancer().reLoadBalance(getServiceName(watchedEvent.getPath()),addresses);
 
     }
 

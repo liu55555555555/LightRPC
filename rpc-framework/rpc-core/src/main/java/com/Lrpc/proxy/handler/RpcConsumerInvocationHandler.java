@@ -49,9 +49,9 @@ public class RpcConsumerInvocationHandler  implements InvocationHandler {
         //1.封装报文
         //将要传输的东西先封装成对象，经过outHandler时被handler处理成二进制报文。
         LrpcRequest lrpcRequest = LrpcRequest.builder()
-                .requestId(LrpcBootstrap.ID_GENERATOR.getId())
-                .compressType(CompressFactory.getStringCompressWrapper(LrpcBootstrap.COMPRESS_TYPE).getCode())
-                .serializeType(SerializerFactory.getStringSerialize(LrpcBootstrap.SERIALIZE_TYPE).getCode())
+                .requestId(LrpcBootstrap.getInstance().getConfiguration().getIdGenerator().getId())
+                .compressType(CompressFactory.getStringCompressWrapper(LrpcBootstrap.getInstance().getConfiguration().getCompressType()).getCode())
+                .serializeType(SerializerFactory.getStringSerialize(LrpcBootstrap.getInstance().getConfiguration().getSerializeType()).getCode())
                 .requestType(RequestType.REQUEST.getId())
                 .requestPayload(RequestPayload.builder()
                         .interfaceName(interfaceClass.getName())
@@ -67,7 +67,7 @@ public class RpcConsumerInvocationHandler  implements InvocationHandler {
 
 
         //2.发现服务，从注册中心寻找一个可用的服务（实际获取的就是可用服务的地址）
-        InetSocketAddress serverAddress = LrpcBootstrap.LOAD_BALANCER.selectServiceAddress(interfaceClass.getName());
+        InetSocketAddress serverAddress = LrpcBootstrap.getInstance().getConfiguration().getLoadBalancer().selectServiceAddress(interfaceClass.getName());
         if(log.isDebugEnabled()){
             log.debug("从注册中心发现服务：{}的可用主机：[{}]",interfaceClass.getName(),serverAddress);
         }
